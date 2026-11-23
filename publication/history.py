@@ -29,6 +29,28 @@ def initialize_publications(connection):
             UNIQUE (batch, revision)
         )
     ''')
+    connection.execute('''
+        CREATE TABLE IF NOT EXISTS issued_vouchers (
+            voucher_id TEXT PRIMARY KEY NOT NULL,
+            seal_id TEXT NOT NULL,
+            lot_id TEXT NOT NULL,
+            buckets TEXT NOT NULL,
+            station_id TEXT NOT NULL,
+            kilograms TEXT NOT NULL,
+            content BLOB NOT NULL,
+            identity TEXT NOT NULL
+        )
+    ''')
+    connection.execute('''
+        CREATE TABLE IF NOT EXISTS confirmed_returns (
+            station_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            voucher_id TEXT NOT NULL,
+            kilograms TEXT NOT NULL,
+            content BLOB NOT NULL,
+            PRIMARY KEY (station_id, request_id)
+        )
+    ''')
 
 
 class PublicationHistory:
@@ -63,3 +85,17 @@ class PublicationHistory:
         if existing != IssuedPublication(data, receipt):
             raise ValueError(f'conflicting fixed publication {package.seal_id}')
         return existing
+
+
+# Voucher issuing and return confirmation live in voucher_book; re-export them
+# here so publication.history remains the single source-side entry point.
+from .voucher_book import confirm_return, issue_voucher  # noqa: E402
+
+__all__ = [
+    'SealReceipt',
+    'IssuedPublication',
+    'initialize_publications',
+    'PublicationHistory',
+    'issue_voucher',
+    'confirm_return',
+]

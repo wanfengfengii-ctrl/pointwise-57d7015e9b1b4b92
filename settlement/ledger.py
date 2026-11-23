@@ -45,6 +45,9 @@ def initialize_settlement(connection):
                 content TEXT NOT NULL
             )
         ''')
+        from .voucher_ledger import initialize_voucher_tables
+
+        initialize_voucher_tables(connection)
 
 
 @dataclass(frozen=True)
